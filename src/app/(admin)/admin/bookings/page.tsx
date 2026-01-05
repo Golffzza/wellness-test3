@@ -50,6 +50,9 @@ export default function AdminBookingsPage() {
   const [rescheduleTarget, setRescheduleTarget] = useState<Booking | null>(null);
   const [assignTarget, setAssignTarget] = useState<Booking | null>(null);
 
+  // ✅ NEW: modal อ่านรายละเอียดปัญหา
+  const [problemTarget, setProblemTarget] = useState<Booking | null>(null);
+
   // วันที่รูปแบบ ISO ใช้เรียก API
   const selectedDateStr = useMemo(
     () => toISODateString(selectedDate),
@@ -145,8 +148,7 @@ export default function AdminBookingsPage() {
             จัดการคิวการให้คำปรึกษา
           </h5>
           <p className="text-sm text-gray-500 mt-1">
-            เลือกวันที่จากปฏิทินเพื่อดูคิวทั้งหมดในวันนั้น และทำการเลื่อนนัด /
-            แจกงาน
+            เลือกวันที่จากปฏิทินเพื่อดูคิวทั้งหมดในวันนั้น และทำการเลื่อนนัด / แจกงาน
           </p>
         </div>
       </div>
@@ -170,10 +172,10 @@ export default function AdminBookingsPage() {
             <div className="flex items-center gap-2 text-sm text-gray-600">
               <CalendarDays className="w-4 h-4 text-primary-500" />
               <span>
-                วันที่เลือก:{' '}
-                <span className="font-semibold">{selectedDateLabel}</span>
+                วันที่เลือก: <span className="font-semibold">{selectedDateLabel}</span>
               </span>
             </div>
+
             <Button
               variant="outline"
               size="sm"
@@ -184,9 +186,7 @@ export default function AdminBookingsPage() {
               disabled={isRefreshing}
               className="flex items-center gap-1"
             >
-              <RefreshCw
-                className={`w-3 h-3 ${isRefreshing ? 'animate-spin' : ''}`}
-              />
+              <RefreshCw className={`w-3 h-3 ${isRefreshing ? 'animate-spin' : ''}`} />
               <span className="hidden sm:inline">รีเฟรช</span>
             </Button>
           </div>
@@ -204,7 +204,7 @@ export default function AdminBookingsPage() {
             ) : (
               <div className="space-y-2.5">
                 {/* Table header */}
-                <div className="hidden md:grid grid-cols-[1.2fr,1fr,1fr,0.9fr,1fr] text-sm font-medium text-gray-600 bg-gray-50 border border-gray-200 rounded-md px-4 py-2 mb-2shadow-sm">
+                <div className="hidden md:grid grid-cols-[1.2fr,1fr,1fr,0.9fr,1fr] text-sm font-medium text-gray-600 bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 mb-2 shadow-sm">
                   <span className="pl-1">ผู้จอง / ช่องทาง</span>
                   <span>เวลา</span>
                   <span>ประเภทปัญหา</span>
@@ -212,82 +212,90 @@ export default function AdminBookingsPage() {
                   <span className="text-right pr-1">การจัดการ</span>
                 </div>
 
-
                 {/* Rows */}
                 <div className="space-y-2">
                   {bookings.map((booking) => (
                     <div
                       key={booking.id}
-                      className="grid gap-2 md:grid-cols-[1.2fr,1fr,1fr,1.1fr,1fr] items-center rounded-xl border border-gray-100 px-1 py-1 text-xs md:text-sm bg-slate-50/70 md:bg-white"
+                      className="grid gap-2 md:grid-cols-[1.2fr,1fr,1fr,1.1fr,1fr] items-center rounded-xl border border-gray-100 px-3 py-3 md:px-4 md:py-3 text-xs md:text-sm bg-slate-50/70 md:bg-white"
                     >
                       {/* User */}
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 min-w-0">
                         {/* Icon */}
-                        <div className="flex items-center justify-center w-9 h-9 rounded-md bg-primary-50 mt-0">
+                        <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-primary-50">
                           <User2 className="w-5 h-5 text-primary-600" />
                         </div>
 
                         {/* Text */}
-                        <div className="leading-tight">
-                          <p className="text-sm font-semibold text-gray-900">
-                            {booking.userName ?? "ไม่ทราบชื่อ"}
+                        <div className="leading-tight min-w-0">
+                          <p className="text-sm font-semibold text-gray-900 truncate">
+                            {booking.userName ?? 'ไม่ทราบชื่อ'}
                           </p>
-                          <p className="text-[15px] text-gray-500">
-                            LINE ID: {booking.lineUserId ?? "-"}
+                          <p className="text-xs text-gray-500 truncate">
+                            LINE ID: {booking.lineUserId ?? '-'}
                           </p>
                         </div>
                       </div>
 
                       {/* Time */}
-                      <div className="flex items-center gap-1.5 text-gray-800 whitespace-nowrap min-w-[150px]">
+                      <div className="flex items-center gap-1.5 text-gray-800 whitespace-nowrap">
                         <Clock3 className="w-4 h-4 text-primary-500" />
                         <span className="text-sm font-medium">
                           {booking.startTime}–{booking.endTime} น.
                         </span>
                       </div>
 
-                      {/* Problem type */}
-                      <div className="flex flex-col gap-0.5 text-gray-800">
-                        <h5 className="font-bold text-md">
-                          {booking.problemType ?? "-"}
-                        </h5>
+                      {/* Problem type (CLICKABLE -> MODAL) */}
+                      <button
+                        type="button"
+                        onClick={() => setProblemTarget(booking)}
+                        className="text-left group min-w-0"
+                        title="กดเพื่อดูรายละเอียด"
+                      >
+                        <p className="font-semibold text-gray-900 group-hover:text-primary-600 transition-colors truncate">
+                          {booking.problemType ?? '-'}
+                        </p>
 
-                        {booking.problemDescription && (
-                          <p className="text-sm text-gray-500 line-clamp-1">
+                        {booking.problemDescription ? (
+                          <p className="text-xs text-gray-500 line-clamp-1 group-hover:text-gray-600">
                             {booking.problemDescription}
                           </p>
+                        ) : (
+                          <p className="text-xs text-gray-400">ไม่มีรายละเอียดเพิ่มเติม</p>
                         )}
-                      </div>
+
+                        <span className="mt-1 inline-flex items-center text-[11px] text-primary-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                          กดเพื่อดูรายละเอียด
+                        </span>
+                      </button>
 
                       {/* Status */}
                       <div className="text-[11px] md:text-xs">
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md 
-                  bg-amber-50 text-amber-700 border border-amber-200 font-medium">
-                          <span className="w-1.5 h-1.5 rounded-full bg-amber-600"></span>
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50 text-amber-700 border border-amber-200 font-medium">
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-600" />
                           รอการยืนยัน
                         </span>
                       </div>
-
 
                       {/* Actions */}
                       <div className="flex flex-col md:items-end items-start gap-2">
                         <Button
                           size="sm"
                           variant="outline"
-                          className="flex items-center gap-0.5 border-amber-300 text-amber-700 hover:bg-amber-50 whitespace-nowrap min-w-[100px]"
+                          className="flex items-center gap-1 border-amber-300 text-amber-700 hover:bg-amber-50 whitespace-nowrap min-w-[110px]"
                           onClick={() => handleOpenReschedule(booking)}
                         >
-                          <ArrowRightLeft className="w-3 h-3" />
+                          <ArrowRightLeft className="w-3.5 h-3.5" />
                           <span>เลื่อนเวลา</span>
                         </Button>
 
                         <Button
                           size="sm"
                           variant="outline"
-                          className="flex items-center gap-2.5 border-emerald-300 text-emerald-700 hover:bg-emerald-50 whitespace-nowrap min-w-[100px]"
+                          className="flex items-center gap-1 border-emerald-300 text-emerald-700 hover:bg-emerald-50 whitespace-nowrap min-w-[140px]"
                           onClick={() => handleOpenAssign(booking)}
                         >
-                          <UserCheck className="w-3 h-3" />
+                          <UserCheck className="w-3.5 h-3.5" />
                           <span>แจกงาน</span>
                         </Button>
                       </div>
@@ -312,7 +320,69 @@ export default function AdminBookingsPage() {
         onClose={() => setAssignTarget(null)}
         onConfirm={handleAssign}
       />
+
+      {/* ✅ NEW: Modal อ่านประเภท/รายละเอียดปัญหา */}
+      <ProblemDetailsModal
+        booking={problemTarget}
+        onClose={() => setProblemTarget(null)}
+      />
     </div>
+  );
+}
+
+// ==========================================
+// ✅ Modal: อ่านรายละเอียดปัญหา (Problem Details)
+// ==========================================
+
+interface ProblemDetailsModalProps {
+  booking: Booking | null;
+  onClose: () => void;
+}
+
+function ProblemDetailsModal({ booking, onClose }: ProblemDetailsModalProps) {
+  if (!booking) return null;
+
+  return (
+    <Modal isOpen={!!booking} onClose={onClose} title="รายละเอียดปัญหา" size="md">
+      <div className="max-h-[70vh] overflow-y-auto pr-1 space-y-4">
+        {/* Header info */}
+        <div className="rounded-xl border border-gray-100 bg-gray-50 p-3">
+          <p className="text-xs text-gray-500 mb-1">ผู้จอง</p>
+          <p className="text-sm font-semibold text-gray-900">
+            {booking.userName ?? 'ไม่ทราบชื่อ'}
+          </p>
+          <p className="text-xs text-gray-500 mt-1">
+            LINE ID: {booking.lineUserId ?? '-'} • เวลา {booking.startTime}–{booking.endTime} น.
+          </p>
+        </div>
+
+        {/* Problem type */}
+        <div>
+          <p className="text-xs text-gray-500 mb-1">ประเภทปัญหา</p>
+          <div className="rounded-xl border border-gray-200 bg-white p-3">
+            <p className="text-base font-semibold text-gray-900">
+              {booking.problemType ?? '-'}
+            </p>
+          </div>
+        </div>
+
+        {/* Problem description */}
+        <div>
+          <p className="text-xs text-gray-500 mb-1">รายละเอียด</p>
+          <div className="rounded-xl border border-gray-200 bg-white p-3">
+            <p className="text-sm text-gray-800 whitespace-pre-wrap">
+              {booking.problemDescription ?? 'ไม่มีรายละเอียดเพิ่มเติม'}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex justify-end pt-2">
+          <Button variant="outline" size="sm" onClick={onClose}>
+            ปิด
+          </Button>
+        </div>
+      </div>
+    </Modal>
   );
 }
 
@@ -358,12 +428,7 @@ function RescheduleBookingModal({
   };
 
   return (
-    <Modal
-      isOpen={!!booking}
-      onClose={onClose}
-      title="เลื่อนเวลานัด"
-      size="md"
-    >
+    <Modal isOpen={!!booking} onClose={onClose} title="เลื่อนเวลานัด" size="md">
       <form onSubmit={handleSubmit} className="space-y-4">
         <p className="text-xs text-gray-500">
           กำลังเลื่อนคิวของ{' '}
@@ -374,9 +439,7 @@ function RescheduleBookingModal({
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div className="sm:col-span-1">
-            <label className="block text-xs text-gray-600 mb-1">
-              วันที่ใหม่
-            </label>
+            <label className="block text-xs text-gray-600 mb-1">วันที่ใหม่</label>
             <input
               type="date"
               className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"
@@ -386,9 +449,7 @@ function RescheduleBookingModal({
             />
           </div>
           <div>
-            <label className="block text-xs text-gray-600 mb-1">
-              เวลาเริ่มต้น
-            </label>
+            <label className="block text-xs text-gray-600 mb-1">เวลาเริ่มต้น</label>
             <input
               type="time"
               className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"
@@ -398,9 +459,7 @@ function RescheduleBookingModal({
             />
           </div>
           <div>
-            <label className="block text-xs text-gray-600 mb-1">
-              เวลาสิ้นสุด
-            </label>
+            <label className="block text-xs text-gray-600 mb-1">เวลาสิ้นสุด</label>
             <input
               type="time"
               className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"
@@ -412,9 +471,7 @@ function RescheduleBookingModal({
         </div>
 
         <div>
-          <label className="block text-xs text-gray-600 mb-1">
-            เหตุผลในการเลื่อนนัด
-          </label>
+          <label className="block text-xs text-gray-600 mb-1">เหตุผลในการเลื่อนนัด</label>
           <textarea
             rows={3}
             className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 resize-none"
@@ -429,11 +486,7 @@ function RescheduleBookingModal({
           <Button type="button" variant="outline" size="sm" onClick={onClose}>
             ยกเลิก
           </Button>
-          <Button
-            type="submit"
-            size="sm"
-            className="bg-amber-500 hover:bg-amber-600"
-          >
+          <Button type="submit" size="sm" className="bg-amber-500 hover:bg-amber-600">
             ยืนยันการเลื่อนนัด
           </Button>
         </div>
@@ -460,9 +513,7 @@ function AssignBookingModal({
   const [assigneeId, setAssigneeId] = useState<string>('');
 
   useEffect(() => {
-    if (booking) {
-      setAssigneeId('');
-    }
+    if (booking) setAssigneeId('');
   }, [booking]);
 
   if (!booking) return null;
@@ -474,12 +525,7 @@ function AssignBookingModal({
   };
 
   return (
-    <Modal
-      isOpen={!!booking}
-      onClose={onClose}
-      title="แจกงานให้ผู้ให้คำปรึกษา"
-      size="sm"
-    >
+    <Modal isOpen={!!booking} onClose={onClose} title="แจกงานให้ผู้ให้คำปรึกษา" size="sm">
       <form onSubmit={handleSubmit} className="space-y-4">
         <p className="text-xs text-gray-500">
           คิวของ{' '}
@@ -489,9 +535,7 @@ function AssignBookingModal({
         </p>
 
         <div>
-          <label className="block text-xs text-gray-600 mb-1">
-            เลือกผู้ให้คำปรึกษา
-          </label>
+          <label className="block text-xs text-gray-600 mb-1">เลือกผู้ให้คำปรึกษา</label>
           <select
             className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 bg-white"
             value={assigneeId}
