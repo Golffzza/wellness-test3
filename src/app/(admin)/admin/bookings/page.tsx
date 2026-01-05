@@ -141,9 +141,9 @@ export default function AdminBookingsPage() {
           <ClipboardList className="w-5 h-5" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 leading-tight">
+          <h5 className="text-2xl font-bold text-gray-900 leading-tight">
             จัดการคิวการให้คำปรึกษา
-          </h1>
+          </h5>
           <p className="text-sm text-gray-500 mt-1">
             เลือกวันที่จากปฏิทินเพื่อดูคิวทั้งหมดในวันนั้น และทำการเลื่อนนัด /
             แจกงาน
@@ -185,7 +185,7 @@ export default function AdminBookingsPage() {
               className="flex items-center gap-1"
             >
               <RefreshCw
-                className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`}
+                className={`w-3 h-3 ${isRefreshing ? 'animate-spin' : ''}`}
               />
               <span className="hidden sm:inline">รีเฟรช</span>
             </Button>
@@ -202,53 +202,58 @@ export default function AdminBookingsPage() {
                 ยังไม่มีคิวในวันที่เลือก
               </div>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-2.5">
                 {/* Table header */}
-                <div className="hidden md:grid grid-cols-[1.2fr,1fr,1.5fr,1fr,1fr] text-xs font-medium text-gray-500 pb-2 border-b border-gray-100">
-                  <span>ผู้จอง / ช่องทาง</span>
+                <div className="hidden md:grid grid-cols-[1.2fr,1fr,1fr,0.9fr,1fr] text-sm font-medium text-gray-600 bg-gray-50 border border-gray-200 rounded-md px-4 py-2 mb-2shadow-sm">
+                  <span className="pl-1">ผู้จอง / ช่องทาง</span>
                   <span>เวลา</span>
                   <span>ประเภทปัญหา</span>
                   <span>สถานะ</span>
-                  <span className="text-right">การจัดการ</span>
+                  <span className="text-right pr-1">การจัดการ</span>
                 </div>
+
 
                 {/* Rows */}
                 <div className="space-y-2">
                   {bookings.map((booking) => (
                     <div
                       key={booking.id}
-                      className="grid gap-2 md:grid-cols-[1.2fr,1fr,1.5fr,1fr,1fr] items-center rounded-xl border border-gray-100 px-3 py-3 text-xs md:text-sm bg-slate-50/70 md:bg-white"
+                      className="grid gap-2 md:grid-cols-[1.2fr,1fr,1fr,1.1fr,1fr] items-center rounded-xl border border-gray-100 px-1 py-1 text-xs md:text-sm bg-slate-50/70 md:bg-white"
                     >
                       {/* User */}
-                      <div className="flex items-start gap-2">
-                        <div className="mt-0.5">
-                          <User2 className="w-4 h-4 text-primary-500" />
+                      <div className="flex items-center gap-2">
+                        {/* Icon */}
+                        <div className="flex items-center justify-center w-9 h-9 rounded-md bg-primary-50 mt-0">
+                          <User2 className="w-5 h-5 text-primary-600" />
                         </div>
-                        <div>
-                          <p className="font-medium text-gray-900">
-                            {booking.userName ?? 'ไม่ทราบชื่อ'}
+
+                        {/* Text */}
+                        <div className="leading-tight">
+                          <p className="text-sm font-semibold text-gray-900">
+                            {booking.userName ?? "ไม่ทราบชื่อ"}
                           </p>
-                          <p className="text-[11px] text-gray-500">
-                            LINE ID: {booking.lineUserId ?? '-'}
+                          <p className="text-[15px] text-gray-500">
+                            LINE ID: {booking.lineUserId ?? "-"}
                           </p>
                         </div>
                       </div>
 
                       {/* Time */}
-                      <div className="flex items-center gap-1 text-gray-800">
-                        <Clock3 className="w-4 h-4 text-gray-400" />
-                        <span>
-                          {booking.startTime} - {booking.endTime} น.
+                      <div className="flex items-center gap-1.5 text-gray-800 whitespace-nowrap min-w-[150px]">
+                        <Clock3 className="w-4 h-4 text-primary-500" />
+                        <span className="text-sm font-medium">
+                          {booking.startTime}–{booking.endTime} น.
                         </span>
                       </div>
 
                       {/* Problem type */}
-                      <div className="text-gray-800">
-                        <p className="font-medium text-[13px]">
-                          {booking.problemType ?? '-'}
-                        </p>
+                      <div className="flex flex-col gap-0.5 text-gray-800">
+                        <h5 className="font-bold text-md">
+                          {booking.problemType ?? "-"}
+                        </h5>
+
                         {booking.problemDescription && (
-                          <p className="text-[11px] text-gray-500 line-clamp-1">
+                          <p className="text-sm text-gray-500 line-clamp-1">
                             {booking.problemDescription}
                           </p>
                         )}
@@ -256,18 +261,20 @@ export default function AdminBookingsPage() {
 
                       {/* Status */}
                       <div className="text-[11px] md:text-xs">
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
-                          {/* ปรับตาม status จริงได้ */}
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md 
+                  bg-amber-50 text-amber-700 border border-amber-200 font-medium">
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-600"></span>
                           รอการยืนยัน
                         </span>
                       </div>
 
+
                       {/* Actions */}
-                      <div className="flex md:justify-end gap-2">
+                      <div className="flex flex-col md:items-end items-start gap-2">
                         <Button
                           size="sm"
                           variant="outline"
-                          className="flex items-center gap-1 border-amber-300 text-amber-700 hover:bg-amber-50"
+                          className="flex items-center gap-0.5 border-amber-300 text-amber-700 hover:bg-amber-50 whitespace-nowrap min-w-[100px]"
                           onClick={() => handleOpenReschedule(booking)}
                         >
                           <ArrowRightLeft className="w-3 h-3" />
@@ -277,7 +284,7 @@ export default function AdminBookingsPage() {
                         <Button
                           size="sm"
                           variant="outline"
-                          className="flex items-center gap-1 border-emerald-300 text-emerald-700 hover:bg-emerald-50"
+                          className="flex items-center gap-2.5 border-emerald-300 text-emerald-700 hover:bg-emerald-50 whitespace-nowrap min-w-[100px]"
                           onClick={() => handleOpenAssign(booking)}
                         >
                           <UserCheck className="w-3 h-3" />
